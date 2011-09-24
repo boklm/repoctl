@@ -1,0 +1,190 @@
+#!/bin/sh
+
+. /etc/repoctl.conf
+
+function isingroup()
+{
+    grp="$1"
+    for group in `groups`
+    do if [ "$grp" = "$group" ]
+    then 
+	return 0
+    fi
+    done
+    return 1
+}
+
+function inlist()
+{
+    k="$1"
+    list="$2"
+    for e in $list
+    do
+	if [ a"$k" = a"$e" ]
+	then
+	    return 0
+	fi
+    done
+    return 1
+}
+
+function update_hdlist()
+{
+    repository="$1"
+    fdeps="$repository/../../media_info/file-deps"
+    test -f "$fdeps" && ofdeps="--file-deps $fdeps"
+    /usr/bin/genhdlist2 -v --versioned --allow-empty-media $ofdeps "$repository"
+}
+
+function update_hdlists()
+{
+    local distrorelease="$1"
+    local section="$2"
+    local sectionrepo="$3"
+
+    for arch in $arches
+    do
+	update_hdlist "$distribdir/$distrorelease/$arch/media/$section/$sectionrepo"
+	update_hdlist "$distribdir/$distrorelease/$arch/media/debug/$section/$sectionrepo"
+    done
+    update_hdlist "$distribdir/$distrorelease/SRPMS/$section/$sectionrepo"
+    update_common_MD5SUM $distrorelease
+}
+
+function update_common_MD5SUM()
+{
+    distrorelease="$1"
+    for arch in $arches
+    do
+	pushd "$distribdir/$distrorelease/$arch/media/media_info"
+	/usr/bin/md5sum hdlist_* synthesis.* > MD5SUM
+	popd
+    done
+}
+
+function mirror_repository()
+{
+    distrorelease="$1"
+    /usr/bin/rsync $mirror_rsync_options "$distribdir/$distrorelease/" "$finaldistribdir/$distrorelease/"
+}
+
+function check_distro_section()
+{
+    local distrorelease="$1"
+    local section="$2"
+    local sectionrepo="$3"
+
+    if ! inlist "$distrorelease" "$distroreleases"
+    then
+	echo "Incorrect distrorelease $distrorelease" >&2
+	exit 1
+    fi
+
+    if ! inlist "$section" "$distrosections"
+    then
+	echo "Incorrect section $section" >&2
+	exit 1
+    fi
+
+    if ! inlist "$sectionrepo" "$sectionsrepos"
+    then
+	echo "Incorrect repository $sectionsrepos" >&2
+	exit 1
+    fi
+}
+
+function move_pkg_files()
+{
+    srcdir="$1"
+    destdir="$2"
+    srcpkg="$3"
+    output="$4"
+
+    for file in "$srcdir/"*.rpm
+    do
+        fname=$(rpm -qp --qf '%{SOURCERPM}' "$file")
+        if [ a"$fname" = a"$srcpkg" ]
+        then
+            $dryrun mv -v -f "$file" "$destdir" >> "$output"
+        fi
+    done
+}
+
+function del_pkg_files()
+{
+    pkgdir="$1"
+    srcpkg="$3"
+    output="$4"
+
+    for file in "$pkgdir/"*.rpm
+    do
+        fname=$(rpm -qp --qf '%{SOURCERPM}' "$file")
+        if [ a"$fname" = a"$srcpkg" ]
+        then
+            $dryrun rm -v -f "$file" >> "$output"
+        fi
+    done
+}
+
+function find_src_pkg()
+{
+    local distrorelease="$1"
+    local section="$2"
+    local sectionrepo="$3"
+    local pkgname="$4"
+
+    for file in "$distribdir/$distrorelease/SRPMS/$section/$sectionrepo/"*.rpm
+    do
+	fname=$(rpm -qp --qf '%{NAME}' "$file")
+	if [ a"$fname" = a"$srcname" ]
+	then
+	    basename "$file"
+	    return 0
+	fi
+    done
+}
+
+function move_pkg()
+{
+    local distrorelease="$1"
+    local src_section="$2"
+    local src_sectionrepo="$3"
+    local dst_section="$4"
+    local dst_sectionrepo="$5"
+    local srcname="$6"
+    local output="$7"
+
+    check_distro_section "$distrorelease" "$src_section" "$src_sectionrepo"
+    check_distro_section "$distrorelease" "$dst_section" "$dst_sectionrepo"
+
+    srcpkg=$(find_src_pkg "$distrorelease" "$src_section" "$src_sectionrepo" "$srcname")
+
+    if [ -z $srcpkg ]
+    then
+	echo "The package $srcname could not be found in $distrorelease/$src_section/$src_sectionrepo repository." >&2
+	exit 2
+    fi
+
+    for arch in $arches
+    do
+	move_pkg_files "$distribdir/$distrorelease/$arch/media/$src_section/$src_sectionrepo" "$distribdir/$distrorelease/$arch/media/$dst_section/$dst_sectionrepo/" "$srcpkg" "$output"
+	move_pkg_files "$distribdir/$distrorelease/$arch/media/debug/$src_section/$src_sectionrepo" "$distribdir/$distrorelease/$arch/media/debug/$dst_section/$dst_sectionrepo/" "$srcpkg" "$output"
+    done
+    $dryrun mv -v -f "$distribdir/$distrorelease/SRPMS/$src_section/$src_sectionrepo/$srcpkg" "$distribdir/$distrorelease/SRPMS/$dst_section/$dst_sectionrepo/" >> "$output"
+}
+
+function del_pkg()
+{
+    local distrorelease="$1"
+    local section="$2"
+    local sectionrepo="$3"
+    local srcname="$4"
+    local output="$5"
+
+    check_distro_section "$distrorelease" "$section" "$sectionrepo"
+
+    srcpkg=$(find_src_pkg "$distrorelease" "$section" "$sectionrepo" "$srcname")
+
+    #TODO
+}
+
