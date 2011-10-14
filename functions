@@ -51,6 +51,81 @@ function update_hdlists()
     update_common_MD5SUM $distrorelease
 }
 
+function get_lock()
+{
+    local lockdir="$1"
+    local waitdir="$lockdir/wait.$$"
+
+    if mkdir "$lockdir"
+    then
+	return
+    else
+	if ! mkdir "$waitdir"
+	then
+	    get_lock "$lockdir"
+	    return
+	fi
+	inotifywait -e delete_self "$waitdir"
+    fi
+}
+
+function rm_lock()
+{
+    local lockdir="$1"
+    if rmdir "$lockdir"
+    then
+	return
+    fi
+    local l=$(ls -tr "$lockdir" | head -1)
+    rmdir "$lockdir/$l"
+}
+
+function get_repo_lock()
+{
+    local distrorelease="$1"
+    local section="$2"
+    local sectionrepo="$3"
+    repolock="$lockdir/$distrorelease-$section-$sectionrepo.lock"
+    get_lock "$repolock"
+}
+
+function rm_repo_lock()
+{
+    local distrorelease="$1"
+    local section="$2"
+    local sectionrepo="$3"
+    repolock="$lockdir/$distrorelease-$section-$sectionrepo.lock"
+    rm_lock "$repolock"
+}
+
+function get_distro_lock()
+{
+    local distrorelease="$1"
+    local distrolock="$lockdir/$distrorelease"
+    get_lock "$distrolock"
+    for distrosection in $distrosections
+    do
+	for sectionrepo in $sectionsrepos
+	do
+	    get_repo_lock $distrorelease $distrosection $sectionrepo
+	done
+    done
+}
+
+function rm_distro_lock()
+{
+    local distrorelease="$1"
+    local distrolock="$lockdir/$distrorelease"
+    for distrosection in $distrosections
+    do
+	for sectionrepo in $sectionsrepos
+	do
+	    rm_repo_lock $distrorelease $distrosection $sectionrepo
+	done
+    done
+    rm_lock "$distrolock"
+}
+
 function update_common_MD5SUM()
 {
     distrorelease="$1"
