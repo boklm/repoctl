@@ -143,7 +143,7 @@ function update_common_MD5SUM()
 function mirror_repository()
 {
     distrorelease="$1"
-    /usr/bin/rsync $mirror_rsync_options "$distribdir/$distrorelease/" "$finaldistribdir/$distrorelease/"
+    $dryrun /usr/bin/rsync $mirror_rsync_options "$distribdir/$distrorelease/" "$finaldistribdir/$distrorelease/"
 }
 
 function check_distro_section()
