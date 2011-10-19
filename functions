@@ -33,7 +33,7 @@ function update_hdlist()
     repository="$1"
     fdeps="$repository/../../media_info/file-deps"
     test -f "$fdeps" && ofdeps="--file-deps $fdeps"
-    /usr/bin/genhdlist2 -v --versioned --allow-empty-media $ofdeps "$repository"
+    $dryrun /usr/bin/genhdlist2 -v --versioned --allow-empty-media $ofdeps "$repository"
 }
 
 function update_hdlists()
@@ -132,7 +132,10 @@ function update_common_MD5SUM()
     for arch in $arches
     do
 	pushd "$distribdir/$distrorelease/$arch/media/media_info"
-	/usr/bin/md5sum hdlist_* synthesis.* > MD5SUM
+	if [ -z "$dryrun" ]
+	then
+	    /usr/bin/md5sum hdlist_* synthesis.* > MD5SUM
+	fi
 	popd
     done
 }
