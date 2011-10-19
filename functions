@@ -221,31 +221,32 @@ function find_src_pkg()
 
 function move_pkg()
 {
-    local distrorelease="$1"
+    local src_distrorelease="$1"
     local src_section="$2"
     local src_sectionrepo="$3"
-    local dst_section="$4"
-    local dst_sectionrepo="$5"
-    local srcname="$6"
-    local output="$7"
+    local dst_distrorelease="$4"
+    local dst_section="$5"
+    local dst_sectionrepo="$6"
+    local srcname="$7"
+    local output="$8"
 
-    check_distro_section "$distrorelease" "$src_section" "$src_sectionrepo"
-    check_distro_section "$distrorelease" "$dst_section" "$dst_sectionrepo"
+    check_distro_section "$src_distrorelease" "$src_section" "$src_sectionrepo"
+    check_distro_section "$dst_distrorelease" "$dst_section" "$dst_sectionrepo"
 
-    srcpkg=$(find_src_pkg "$distrorelease" "$src_section" "$src_sectionrepo" "$srcname")
+    srcpkg=$(find_src_pkg "$src_distrorelease" "$src_section" "$src_sectionrepo" "$srcname")
 
     if [ -z $srcpkg ]
     then
-	echo "The package $srcname could not be found in $distrorelease/$src_section/$src_sectionrepo repository." >&2
+	echo "The package $srcname could not be found in $src_distrorelease/$src_section/$src_sectionrepo repository." >&2
 	exit 2
     fi
 
     for arch in $arches
     do
-	move_pkg_files "$distribdir/$distrorelease/$arch/media/$src_section/$src_sectionrepo" "$distribdir/$distrorelease/$arch/media/$dst_section/$dst_sectionrepo/" "$srcpkg" "$output"
-	move_pkg_files "$distribdir/$distrorelease/$arch/media/debug/$src_section/$src_sectionrepo" "$distribdir/$distrorelease/$arch/media/debug/$dst_section/$dst_sectionrepo/" "$srcpkg" "$output"
+	move_pkg_files "$distribdir/$src_distrorelease/$arch/media/$src_section/$src_sectionrepo" "$distribdir/$dst_distrorelease/$arch/media/$dst_section/$dst_sectionrepo/" "$srcpkg" "$output"
+	move_pkg_files "$distribdir/$src_distrorelease/$arch/media/debug/$src_section/$src_sectionrepo" "$distribdir/$dst_distrorelease/$arch/media/debug/$dst_section/$dst_sectionrepo/" "$srcpkg" "$output"
     done
-    $dryrun mv -v -f "$distribdir/$distrorelease/SRPMS/$src_section/$src_sectionrepo/$srcpkg" "$distribdir/$distrorelease/SRPMS/$dst_section/$dst_sectionrepo/" >> "$output"
+    $dryrun mv -v -f "$distribdir/$src_distrorelease/SRPMS/$src_section/$src_sectionrepo/$srcpkg" "$distribdir/$dst_distrorelease/SRPMS/$dst_section/$dst_sectionrepo/" >> "$output"
 }
 
 function del_pkg()
