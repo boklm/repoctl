@@ -4,7 +4,7 @@
 
 function isingroup()
 {
-    grp="$1"
+    local grp="$1"
     for group in `groups`
     do if [ "$grp" = "$group" ]
     then 
@@ -16,8 +16,8 @@ function isingroup()
 
 function inlist()
 {
-    k="$1"
-    list="$2"
+    local k="$1"
+    local list="$2"
     for e in $list
     do
 	if [ a"$k" = a"$e" ]
@@ -30,8 +30,8 @@ function inlist()
 
 function update_hdlist()
 {
-    repository="$1"
-    fdeps="$repository/../../media_info/file-deps"
+    local repository="$1"
+    local fdeps="$repository/../../media_info/file-deps"
     test -f "$fdeps" && ofdeps="--file-deps $fdeps"
     $dryrun /usr/bin/genhdlist2 -v --versioned --allow-empty-media $ofdeps "$repository"
 }
@@ -128,7 +128,7 @@ function rm_distro_lock()
 
 function update_common_MD5SUM()
 {
-    distrorelease="$1"
+    local distrorelease="$1"
     for arch in $arches
     do
 	pushd "$distribdir/$distrorelease/$arch/media/media_info"
@@ -142,7 +142,7 @@ function update_common_MD5SUM()
 
 function mirror_repository()
 {
-    distrorelease="$1"
+    local distrorelease="$1"
     $dryrun /usr/bin/rsync $mirror_rsync_options "$distribdir/$distrorelease/" "$finaldistribdir/$distrorelease/"
 }
 
@@ -173,14 +173,14 @@ function check_distro_section()
 
 function move_pkg_files()
 {
-    srcdir="$1"
-    destdir="$2"
-    srcpkg="$3"
-    output="$4"
+    local srcdir="$1"
+    local destdir="$2"
+    local srcpkg="$3"
+    local output="$4"
 
     for file in "$srcdir/"*.rpm
     do
-        fname=$(rpm -qp --qf '%{SOURCERPM}' "$file")
+        local fname=$(rpm -qp --qf '%{SOURCERPM}' "$file")
         if [ a"$fname" = a"$srcpkg" ]
         then
             $dryrun mv -v -f "$file" "$destdir" >> "$output"
@@ -190,13 +190,13 @@ function move_pkg_files()
 
 function del_pkg_files()
 {
-    pkgdir="$1"
-    srcpkg="$3"
-    output="$4"
+    local pkgdir="$1"
+    local srcpkg="$3"
+    local output="$4"
 
     for file in "$pkgdir/"*.rpm
     do
-        fname=$(rpm -qp --qf '%{SOURCERPM}' "$file")
+        local fname=$(rpm -qp --qf '%{SOURCERPM}' "$file")
         if [ a"$fname" = a"$srcpkg" ]
         then
             $dryrun rm -v -f "$file" >> "$output"
@@ -213,7 +213,7 @@ function find_src_pkg()
 
     for file in "$distribdir/$distrorelease/SRPMS/$section/$sectionrepo/"*.rpm
     do
-	fname=$(rpm -qp --qf '%{NAME}' "$file")
+	local fname=$(rpm -qp --qf '%{NAME}' "$file")
 	if [ a"$fname" = a"$srcname" ]
 	then
 	    basename "$file"
@@ -236,7 +236,7 @@ function move_pkg()
     check_distro_section "$src_distrorelease" "$src_section" "$src_sectionrepo"
     check_distro_section "$dst_distrorelease" "$dst_section" "$dst_sectionrepo"
 
-    srcpkg=$(find_src_pkg "$src_distrorelease" "$src_section" "$src_sectionrepo" "$srcname")
+    local srcpkg=$(find_src_pkg "$src_distrorelease" "$src_section" "$src_sectionrepo" "$srcname")
 
     if [ -z $srcpkg ]
     then
@@ -262,7 +262,7 @@ function del_pkg()
 
     check_distro_section "$distrorelease" "$section" "$sectionrepo"
 
-    srcpkg=$(find_src_pkg "$distrorelease" "$section" "$sectionrepo" "$srcname")
+    local srcpkg=$(find_src_pkg "$distrorelease" "$section" "$sectionrepo" "$srcname")
 
     #TODO
 }
