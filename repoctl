@@ -108,7 +108,7 @@ function usage()
      lnpkg
      rmpkg
      genhdlists
-     mirror
+     mirrordistro
      getrepolock
      rmrepolock
      getdistrolock
