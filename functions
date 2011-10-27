@@ -191,7 +191,13 @@ function move_pkg_files()
         local fname=$(rpm -qp --qf '%{SOURCERPM}' "$file")
         if [ a"$fname" = a"$srcpkg" ]
         then
-            $dryrun mv -v -f "$file" "$destdir" >> "$output"
+	    local bn=$(basename "$file")
+	    get_repo_lock "$dst_distrorelease" "$dst_section" "$dst_sectionrepo"
+	    $dryrun ln -v "$file" "$destdir/$bn" >> "$output"
+	    rm_repo_lock "$dst_distrorelease" "$dst_section" "$dst_sectionrepo"
+	    get_repo_lock "$src_distrorelease" "$src_section" "$src_sectionrepo"
+	    $dryrun rm -f -v "$file" >> "$output"
+	    rm_repo_lock "$src_distrorelease" "$src_section" "$src_sectionrepo"
         fi
     done
 }
@@ -211,7 +217,9 @@ function del_pkg_files()
         local fname=$(rpm -qp --qf '%{SOURCERPM}' "$file")
         if [ a"$fname" = a"$srcpkg" ]
         then
+	    get_repo_lock "$distrorelease" "$section" "$sectionrepo"
             $dryrun rm -v -f "$file" >> "$output"
+	    rm_repo_lock "$distrorelease" "$section" "$sectionrepo"
         fi
     done
 }
