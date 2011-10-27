@@ -173,10 +173,18 @@ function check_distro_section()
 
 function move_pkg_files()
 {
-    local srcdir="$1"
-    local destdir="$2"
-    local srcpkg="$3"
-    local output="$4"
+    local src_distrorelease="$1"; shift
+    local src_section="$1"; shift
+    local src_sectionrepo="$1"; shift
+
+    local dst_distrorelease="$1"; shift
+    local dst_section="$1"; shift
+    local dst_sectionrepo="$1"; shift
+
+    local srcdir="$1"; shift
+    local destdir="$1"; shift
+    local srcpkg="$1"; shift
+    local output="$1"; shift
 
     for file in "$srcdir/"*.rpm
     do
@@ -190,9 +198,13 @@ function move_pkg_files()
 
 function del_pkg_files()
 {
-    local pkgdir="$1"
-    local srcpkg="$3"
-    local output="$4"
+    local distrorelease="$1"; shift
+    local section="$1"; shift
+    local sectionrepo="$1"; shift
+
+    local pkgdir="$1"; shift
+    local srcpkg="$1"; shift
+    local output="$1"; shift
 
     for file in "$pkgdir/"*.rpm
     do
@@ -246,8 +258,18 @@ function move_pkg()
 
     for arch in $arches
     do
-	move_pkg_files "$distribdir/$src_distrorelease/$arch/media/$src_section/$src_sectionrepo" "$distribdir/$dst_distrorelease/$arch/media/$dst_section/$dst_sectionrepo/" "$srcpkg" "$output"
-	move_pkg_files "$distribdir/$src_distrorelease/$arch/media/debug/$src_section/$src_sectionrepo" "$distribdir/$dst_distrorelease/$arch/media/debug/$dst_section/$dst_sectionrepo/" "$srcpkg" "$output"
+	move_pkg_files \
+	    "$src_distrorelease" "$src_section" "$src_sectionrepo" \
+	    "$dst_distrorelease" "$dst_section" "$dst_sectionrepo" \
+	    "$distribdir/$src_distrorelease/$arch/media/$src_section/$src_sectionrepo" \
+	    "$distribdir/$dst_distrorelease/$arch/media/$dst_section/$dst_sectionrepo/" \
+	    "$srcpkg" "$output"
+	move_pkg_files \
+	    "$src_distrorelease" "$src_section" "$src_sectionrepo" \
+	    "$dst_distrorelease" "$dst_section" "$dst_sectionrepo" \
+	    "$distribdir/$src_distrorelease/$arch/media/debug/$src_section/$src_sectionrepo" \
+	    "$distribdir/$dst_distrorelease/$arch/media/debug/$dst_section/$dst_sectionrepo/" \
+	    "$srcpkg" "$output"
     done
     $dryrun mv -v -f "$distribdir/$src_distrorelease/SRPMS/$src_section/$src_sectionrepo/$srcpkg" "$distribdir/$dst_distrorelease/SRPMS/$dst_section/$dst_sectionrepo/" >> "$output"
 }
