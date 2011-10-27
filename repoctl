@@ -109,6 +109,10 @@ function usage()
      rmpkg
      genhdlists
      mirror
+     getrepolock
+     rmrepolock
+     getdistrolock
+     rmdistrolock
 
   For more infos about a command, use :
     repoctl COMMAND --help
