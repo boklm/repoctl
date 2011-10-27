@@ -171,6 +171,29 @@ function check_distro_section()
     fi
 }
 
+function move_pkg_file()
+{
+    local src_distrorelease="$1"; shift
+    local src_section="$1"; shift
+    local src_sectionrepo="$1"; shift
+
+    local dst_distrorelease="$1"; shift
+    local dst_section="$1"; shift
+    local dst_sectionrepo="$1"; shift
+
+    local srcfile="$1"; shift
+    local destdir="$1"; shift
+    local output="$1"; shift
+
+    local bn=$(basename "$srcfile")
+    get_repo_lock "$dst_distrorelease" "$dst_section" "$dst_sectionrepo"
+    $dryrun ln -v "$srcfile" "$destdir/$bn" >> "$output"
+    rm_repo_lock "$dst_distrorelease" "$dst_section" "$dst_sectionrepo"
+    get_repo_lock "$src_distrorelease" "$src_section" "$src_sectionrepo"
+    $dryrun rm -f -v "$srcfile" >> "$output"
+    rm_repo_lock "$src_distrorelease" "$src_section" "$src_sectionrepo"
+}
+
 function move_pkg_files()
 {
     local src_distrorelease="$1"; shift
@@ -191,13 +214,10 @@ function move_pkg_files()
         local fname=$(rpm -qp --qf '%{SOURCERPM}' "$file")
         if [ a"$fname" = a"$srcpkg" ]
         then
-	    local bn=$(basename "$file")
-	    get_repo_lock "$dst_distrorelease" "$dst_section" "$dst_sectionrepo"
-	    $dryrun ln -v "$file" "$destdir/$bn" >> "$output"
-	    rm_repo_lock "$dst_distrorelease" "$dst_section" "$dst_sectionrepo"
-	    get_repo_lock "$src_distrorelease" "$src_section" "$src_sectionrepo"
-	    $dryrun rm -f -v "$file" >> "$output"
-	    rm_repo_lock "$src_distrorelease" "$src_section" "$src_sectionrepo"
+	    move_pkg_file \
+		"$src_distrorelease" "$src_section" "$src_sectionrepo" \
+		"$dst_distrorelease" "$dst_section" "$dst_sectionrepo" \
+		"$file" "$destdir" "$output"
         fi
     done
 }
@@ -279,7 +299,12 @@ function move_pkg()
 	    "$distribdir/$dst_distrorelease/$arch/media/debug/$dst_section/$dst_sectionrepo/" \
 	    "$srcpkg" "$output"
     done
-    $dryrun mv -v -f "$distribdir/$src_distrorelease/SRPMS/$src_section/$src_sectionrepo/$srcpkg" "$distribdir/$dst_distrorelease/SRPMS/$dst_section/$dst_sectionrepo/" >> "$output"
+    move_pkg_file \
+	"$src_distrorelease" "$src_section" "$src_sectionrepo" \
+	"$dst_distrorelease" "$dst_section" "$dst_sectionrepo" \
+	"$distribdir/$src_distrorelease/SRPMS/$src_section/$src_sectionrepo/$srcpkg" \
+	"$distribdir/$dst_distrorelease/SRPMS/$dst_section/$dst_sectionrepo/" \
+	"$output"
 }
 
 function del_pkg()
