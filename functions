@@ -42,6 +42,7 @@ function update_hdlists()
     local section="$2"
     local sectionrepo="$3"
 
+    check_distro_section "$distrorelease" "$section" "$sectionrepo"
     for arch in $arches
     do
 	update_hdlist "$distribdir/$distrorelease/$arch/media/$section/$sectionrepo"
