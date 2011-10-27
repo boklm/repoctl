@@ -172,6 +172,9 @@ function check_distro_section()
     fi
 }
 
+# This function can be used to move/remove/link a package file
+# To remove the file, set dst_* variables to ""
+# To link the file, set src_* variables to ""
 function move_pkg_file()
 {
     local src_distrorelease="$1"; shift
@@ -186,15 +189,24 @@ function move_pkg_file()
     local destdir="$1"; shift
     local output="$1"; shift
 
-    local bn=$(basename "$srcfile")
-    get_repo_lock "$dst_distrorelease" "$dst_section" "$dst_sectionrepo"
-    $dryrun ln -v "$srcfile" "$destdir/$bn" >> "$output"
-    rm_repo_lock "$dst_distrorelease" "$dst_section" "$dst_sectionrepo"
-    get_repo_lock "$src_distrorelease" "$src_section" "$src_sectionrepo"
-    $dryrun rm -f -v "$srcfile" >> "$output"
-    rm_repo_lock "$src_distrorelease" "$src_section" "$src_sectionrepo"
+    if [ -n "$dst_distrorelease$dst_section$dst_sectionrepo" ]
+    then
+	local bn=$(basename "$srcfile")
+	get_repo_lock "$dst_distrorelease" "$dst_section" "$dst_sectionrepo"
+	$dryrun ln -v "$srcfile" "$destdir/$bn" >> "$output"
+	rm_repo_lock "$dst_distrorelease" "$dst_section" "$dst_sectionrepo"
+    fi
+    if [ -n "$src_distrorelease$src_section$src_sectionrepo" ]
+    then
+	get_repo_lock "$src_distrorelease" "$src_section" "$src_sectionrepo"
+	$dryrun rm -f -v "$srcfile" >> "$output"
+	rm_repo_lock "$src_distrorelease" "$src_section" "$src_sectionrepo"
+    fi
 }
 
+# This function can be used to move/remove/link package files
+# To remove the files, set dst_* variables to ""
+# To link the files, set src_* variables to ""
 function move_pkg_files()
 {
     local src_distrorelease="$1"; shift
@@ -223,28 +235,6 @@ function move_pkg_files()
     done
 }
 
-function del_pkg_files()
-{
-    local distrorelease="$1"; shift
-    local section="$1"; shift
-    local sectionrepo="$1"; shift
-
-    local pkgdir="$1"; shift
-    local srcpkg="$1"; shift
-    local output="$1"; shift
-
-    for file in "$pkgdir/"*.rpm
-    do
-        local fname=$(rpm -qp --qf '%{SOURCERPM}' "$file")
-        if [ a"$fname" = a"$srcpkg" ]
-        then
-	    get_repo_lock "$distrorelease" "$section" "$sectionrepo"
-            $dryrun rm -v -f "$file" >> "$output"
-	    rm_repo_lock "$distrorelease" "$section" "$sectionrepo"
-        fi
-    done
-}
-
 function find_src_pkg()
 {
     local distrorelease="$1"
@@ -263,6 +253,8 @@ function find_src_pkg()
     done
 }
 
+# This function can be used to move or remove a package
+# To remove a package, set dst_* variables to ""
 function move_pkg()
 {
     local src_distrorelease="$1"
@@ -275,7 +267,8 @@ function move_pkg()
     local output="$8"
 
     check_distro_section "$src_distrorelease" "$src_section" "$src_sectionrepo"
-    check_distro_section "$dst_distrorelease" "$dst_section" "$dst_sectionrepo"
+    [ -z "$dst_distrorelease$dst_section$dst_sectionrepo" ] \
+	|| check_distro_section "$dst_distrorelease" "$dst_section" "$dst_sectionrepo"
 
     local srcpkg=$(find_src_pkg "$src_distrorelease" "$src_section" "$src_sectionrepo" "$srcname")
 
@@ -306,20 +299,5 @@ function move_pkg()
 	"$distribdir/$src_distrorelease/SRPMS/$src_section/$src_sectionrepo/$srcpkg" \
 	"$distribdir/$dst_distrorelease/SRPMS/$dst_section/$dst_sectionrepo/" \
 	"$output"
-}
-
-function del_pkg()
-{
-    local distrorelease="$1"
-    local section="$2"
-    local sectionrepo="$3"
-    local srcname="$4"
-    local output="$5"
-
-    check_distro_section "$distrorelease" "$section" "$sectionrepo"
-
-    local srcpkg=$(find_src_pkg "$distrorelease" "$section" "$sectionrepo" "$srcname")
-
-    #TODO
 }
 
