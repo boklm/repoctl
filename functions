@@ -230,7 +230,7 @@ function move_pkg_file()
     fi
     if [ -z "$dst_distrorelease$dst_section$dst_sectionrepo$src_distrorelease$src_section$src_sectionrepo" ]
     then
-        echo "$srcfile" >> "output"
+        echo "$srcfile" >> "$output"
     fi
 }
 
