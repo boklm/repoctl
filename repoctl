@@ -20,7 +20,7 @@ Options:
 
 Example :
   Move emacs packages from 1/core/updates_testing to 1/core/updates :
-  repoctl mvpkg --srcrepo 1:core:updates_testing --dstrepo 1:core:updates \
+  repoctl mvpkg --srcrepo 1/core/updates_testing --dstrepo 1/core/updates \
                   --srcpkg emacs
 EOF
 	    ;;
@@ -35,7 +35,7 @@ Options:
 
 Example :
   Remove emacs package from 1/core/updates_testing repository :
-  repoctl rmpkg --srcrepo 1:core:updates_testing --srcpkg emacs
+  repoctl rmpkg --srcrepo 1/core/updates_testing --srcpkg emacs
 
 EOF
 	    ;;
@@ -46,7 +46,7 @@ Usage: repoctl lspkg --srcrepo distribution:section:sectionrepo \\
 
 Example :
   List emacs packages from 1/core/updates_testing repository :
-  repoctl lspkg --srcrepo 1:core:updates_testing --srcpkg emacs
+  repoctl lspkg --srcrepo 1/core/updates_testing --srcpkg emacs
 EOF
 	    ;;
     esac
@@ -83,10 +83,10 @@ function mvpkg()
 		nomirror=1
 		shift;;
 	    --srcrepo)
-		IFS=':' read -ra srcrepo <<< "$2"
+		IFS='/' read -ra srcrepo <<< "$2"
 		shift;shift;;
 	    --dstrepo)
-		IFS=':' read -ra dstrepo <<< "$2"
+		IFS='/' read -ra dstrepo <<< "$2"
 		shift;shift;;
 	    --srcpkg)
 		srcpkg="$2"
@@ -151,7 +151,7 @@ function lspkg()
 		exit 0
 		;;
 	    --srcrepo)
-		IFS=':' read -ra srcrepo <<< "$2"
+		IFS='/' read -ra srcrepo <<< "$2"
 		shift;shift;;
 	    --srcpkg)
 		srcpkg="$2"
