@@ -24,12 +24,26 @@ Example :
                   --srcpkg emacs
 EOF
 	    ;;
+	rmpkg)
+	    cat <<EOF
+Usage: repoctl rmpkg [options] --srcrepo distribution:section:sectionrepo \\
+			       --srcpkg|--binpkg name
+
+Options:
+  rmpkg can take the same options as mvpkg. See repoctl mvpkg --help
+  for details.
+
+Example :
+  Remove emacs package from 1/core/updates_testing repository :
+  repoctl rmpkg --srcrepo 1:core:updates_testing --srcpkg emacs
+
+EOF
     esac
 }
 
 function mvpkg()
 {
-    args=$(getopt -o hn -l srcrepo:,dstrepo:,dry-run,help,no-genhdlists,no-mirror,srcpkg:,binpkg: -- "$@")
+    args=$(getopt -o hn -l srcrepo:,dstrepo:,dry-run,remove,help,no-genhdlists,no-mirror,srcpkg:,binpkg: -- "$@")
     [ $? -ne 0 ] && usage_cmd mvpkg && exit 1
     eval set -- "$args"
     [ $# -lt 1 ] && exit 1
@@ -37,11 +51,19 @@ function mvpkg()
     do
 	case $1 in
 	    -h|--help)
-		usage_cmd mvpkg
+		if [ -z "$remove" ]
+		then
+		    usage_cmd mvpkg
+		else
+		    usage_cmd rmpkg
+		fi
 		exit 0
 		;;
 	    -n|--dry-run)
 		dryrun=echo
+		shift;;
+	    --remove)
+		remove=1
 		shift;;
 	    --no-genhdlists)
 		nogenhdlists=1
@@ -72,7 +94,7 @@ function mvpkg()
 		;;
 	esac
     done
-    if [ -z "$srcrepo" -o -z "$dstrepo" -o \( -z "$srcpkg" -a -z "$binpkg" \) ]
+    if [ -z "$srcrepo" -o -z "$remove$dstrepo" -o \( -z "$srcpkg" -a -z "$binpkg" \) ]
     then
 	usage
 	exit 1
@@ -85,17 +107,23 @@ function mvpkg()
 	if [ -z "$nogenhdlists" ]
 	then
 	    update_hdlists "${srcrepo[0]}" "${srcrepo[1]}" "${srcrepo[2]}"
-	    update_hdlists "${dstrepo[0]}" "${dstrepo[1]}" "${dstrepo[2]}"
+	    [ -n "$dstrepo" ] &&
+		update_hdlists "${dstrepo[0]}" "${dstrepo[1]}" "${dstrepo[2]}"
 	    if [ -z "$nomirror" ]
 	    then
 		mirror_repository "${srcrepo[0]}"
-		[ "${srcrepo[0]}" != "${dstrepo[0]}" ] &&
+		[ -n "${dstrepo[0]}" ] && [ "${srcrepo[0]}" != "${dstrepo[0]}" ] &&
 		    mirror_repository "${dstrepo[0]}"
 	    fi
 	fi
     else
 	echo "The --binpkg option is not supported yet"
     fi
+}
+
+function rmpkg()
+{
+    mvpkg --remove $@
 }
 
 function usage()
@@ -124,6 +152,10 @@ case "$1" in
     mvpkg)
 	shift
 	mvpkg $@
+	;;
+    rmpkg)
+	shift
+	rmpkg $@
 	;;
     *)
 	usage
