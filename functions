@@ -202,6 +202,10 @@ function move_pkg_file()
 	$dryrun rm -f -v "$srcfile" >> "$output"
 	rm_repo_lock "$src_distrorelease" "$src_section" "$src_sectionrepo"
     fi
+    if [ -z "$dst_distrorelease$dst_section$dst_sectionrepo$src_distrorelease$src_section$src_sectionrepo" ]
+    then
+        echo "$srcfile" >> "output"
+    fi
 }
 
 # This function can be used to move/remove/link package files
