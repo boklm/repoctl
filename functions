@@ -328,7 +328,7 @@ function move_pkg()
     move_pkg_file \
 	"$src_distrorelease" "$src_section" "$src_sectionrepo" \
 	"$dst_distrorelease" "$dst_section" "$dst_sectionrepo" \
-	$(get_media_path_src "$src_distrorelease" "$src_section" "$src_sectionrepo") \
+	$(get_media_path_src "$src_distrorelease" "$src_section" "$src_sectionrepo")/"$srcpkg" \
 	$(get_media_path_src "$dst_distrorelease" "$dst_section" "$dst_sectionrepo") \
 	"$output"
 }
