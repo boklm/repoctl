@@ -28,6 +28,32 @@ function inlist()
     return 1
 }
 
+function get_media_path()
+{
+    local distrorelease="$1"; shift
+    local section="$1"; shift
+    local sectionrepo="$1"; shift
+    local arch="$1"; shift
+    echo "$distribdir/$distrorelease/$arch/media/$section/$sectionrepo"
+}
+
+function get_media_path_debug()
+{
+    local distrorelease="$1"; shift
+    local section="$1"; shift
+    local sectionrepo="$1"; shift
+    local arch="$1"; shift
+    echo "$distribdir/$distrorelease/$arch/media/debug/$section/$sectionrepo"
+}
+
+function get_media_path_src()
+{
+    local distrorelease="$1"; shift
+    local section="$1"; shift
+    local sectionrepo="$1"; shift
+    echo "$distribdir/$distrorelease/SRPMS/$section/$sectionrepo"
+}
+
 function update_hdlist()
 {
     local repository="$1"
@@ -247,7 +273,8 @@ function find_src_pkg()
     local pkgname="$4"
 
     check_distro_section "$distrorelease" "$section" "$sectionrepo"
-    for file in "$distribdir/$distrorelease/SRPMS/$section/$sectionrepo/"*.rpm
+    srcdir=$(get_media_path_src "$distrorelease" "$section" "$sectionrepo")
+    for file in "$srcdir/"*.rpm
     do
 	local fname=$(rpm -qp --qf '%{NAME}' "$file")
 	if [ a"$fname" = a"$pkgname" ]
@@ -288,21 +315,21 @@ function move_pkg()
 	move_pkg_files \
 	    "$src_distrorelease" "$src_section" "$src_sectionrepo" \
 	    "$dst_distrorelease" "$dst_section" "$dst_sectionrepo" \
-	    "$distribdir/$src_distrorelease/$arch/media/$src_section/$src_sectionrepo" \
-	    "$distribdir/$dst_distrorelease/$arch/media/$dst_section/$dst_sectionrepo/" \
+	    $(get_media_path "$src_distrorelease" "$src_section" "$src_sectionrepo" "$arch") \
+	    $(get_media_path "$dst_distrorelease" "$dst_section" "$dst_sectionrepo" "$arch") \
 	    "$srcpkg" "$output"
 	move_pkg_files \
 	    "$src_distrorelease" "$src_section" "$src_sectionrepo" \
 	    "$dst_distrorelease" "$dst_section" "$dst_sectionrepo" \
-	    "$distribdir/$src_distrorelease/$arch/media/debug/$src_section/$src_sectionrepo" \
-	    "$distribdir/$dst_distrorelease/$arch/media/debug/$dst_section/$dst_sectionrepo/" \
+	    $(get_media_path_debug "$src_distrorelease" "$src_section" "$src_sectionrepo" "$arch") \
+	    $(get_media_path_debug "$dst_distrorelease" "$dst_section" "$dst_sectionrepo" "$arch") \
 	    "$srcpkg" "$output"
     done
     move_pkg_file \
 	"$src_distrorelease" "$src_section" "$src_sectionrepo" \
 	"$dst_distrorelease" "$dst_section" "$dst_sectionrepo" \
-	"$distribdir/$src_distrorelease/SRPMS/$src_section/$src_sectionrepo/$srcpkg" \
-	"$distribdir/$dst_distrorelease/SRPMS/$dst_section/$dst_sectionrepo/" \
+	$(get_media_path_src "$src_distrorelease" "$src_section" "$src_sectionrepo") \
+	$(get_media_path_src "$dst_distrorelease" "$dst_section" "$dst_sectionrepo") \
 	"$output"
 }
 
