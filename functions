@@ -169,8 +169,10 @@ function update_common_MD5SUM()
 function mirror_repository()
 {
     local distrorelease="$1"
+    get_distro_lock "$distrorelease"
     update_common_MD5SUM "$distrorelease"
     $dryrun /usr/bin/rsync $mirror_rsync_options "$distribdir/$distrorelease/" "$finaldistribdir/$distrorelease/"
+    rm_distro_lock "$distrorelease"
 }
 
 function check_distro_section()
