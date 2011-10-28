@@ -242,6 +242,7 @@ function find_src_pkg()
     local sectionrepo="$3"
     local pkgname="$4"
 
+    check_distro_section "$distrorelease" "$section" "$sectionrepo"
     for file in "$distribdir/$distrorelease/SRPMS/$section/$sectionrepo/"*.rpm
     do
 	local fname=$(rpm -qp --qf '%{NAME}' "$file")
