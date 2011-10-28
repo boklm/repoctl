@@ -246,7 +246,7 @@ function find_src_pkg()
     for file in "$distribdir/$distrorelease/SRPMS/$section/$sectionrepo/"*.rpm
     do
 	local fname=$(rpm -qp --qf '%{NAME}' "$file")
-	if [ a"$fname" = a"$srcname" ]
+	if [ a"$fname" = a"$pkgname" ]
 	then
 	    basename "$file"
 	    return 0
