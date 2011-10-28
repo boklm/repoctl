@@ -7,9 +7,9 @@ function usage_cmd()
     case "$1" in
 	mvpkg)
 	    cat <<EOF
-Usage: repoctl mvpkg [options] --srcrepo distribution:section:sectionrepo \
-                                 --dstrepo distribution:section:sectionrepo \
-				 --srcpkg|--binpkg name
+Usage: repoctl mvpkg [options] --srcrepo distribution:section:sectionrepo \\
+			       --dstrepo distribution:section:sectionrepo \\
+			       --srcpkg|--binpkg name
 
 Options:
   --dry-run : don't do anything, but show what would have been done.
