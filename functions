@@ -54,6 +54,31 @@ function get_media_path_src()
     echo "$distribdir/$distrorelease/SRPMS/$section/$sectionrepo"
 }
 
+function set_hdlists_needupdate()
+{
+    local distrorelease="$1"
+    local section="$2"
+    local sectionrepo="$3"
+    touch "$hdlistsdir/$distrorelease-$section-$sectionrepo"
+}
+
+function update_hdlists_if_needed()
+{
+    for distrorelease in $distroreleases
+    do
+	for section in $distrosections
+	do
+	    for sectionrepo in $sectionsrepos
+	    do
+		if [ -f "$hdlistsdir/$distrorelease-$section-$sectionrepo" ]
+		then
+		    update_hdlists "$distrorelease" "$section" "$sectionrepo"
+		fi
+	    done
+	done
+    done
+}
+
 function update_hdlist()
 {
     local repository="$1"
@@ -69,12 +94,15 @@ function update_hdlists()
     local sectionrepo="$3"
 
     check_distro_section "$distrorelease" "$section" "$sectionrepo"
+    get_repo_lock "$distrorelease" "$section" "$sectionrepo"
+    rm -f "$hdlistsdir/$distrorelease-$section-$sectionrepo"
     for arch in $arches
     do
 	update_hdlist "$distribdir/$distrorelease/$arch/media/$section/$sectionrepo"
 	update_hdlist "$distribdir/$distrorelease/$arch/media/debug/$section/$sectionrepo"
     done
     update_hdlist "$distribdir/$distrorelease/SRPMS/$section/$sectionrepo"
+    rm_repo_lock "$distrorelease" "$section" "$sectionrepo"
 }
 
 function get_lock()
@@ -221,12 +249,14 @@ function move_pkg_file()
     then
 	local bn=$(basename "$srcfile")
 	get_repo_lock "$dst_distrorelease" "$dst_section" "$dst_sectionrepo"
+	set_hdlists_needupdate "$dst_distrorelease" "$dst_section" "$dst_sectionrepo"
 	$dryrun ln -v "$srcfile" "$destdir/$bn" >> "$output"
 	rm_repo_lock "$dst_distrorelease" "$dst_section" "$dst_sectionrepo"
     fi
     if [ -n "$src_distrorelease$src_section$src_sectionrepo" ]
     then
 	get_repo_lock "$src_distrorelease" "$src_section" "$src_sectionrepo"
+	set_hdlists_needupdate "$src_distrorelease" "$src_section" "$src_sectionrepo"
 	$dryrun rm -f -v "$srcfile" >> "$output"
 	rm_repo_lock "$src_distrorelease" "$src_section" "$src_sectionrepo"
     fi
