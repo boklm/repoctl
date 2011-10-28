@@ -75,7 +75,6 @@ function update_hdlists()
 	update_hdlist "$distribdir/$distrorelease/$arch/media/debug/$section/$sectionrepo"
     done
     update_hdlist "$distribdir/$distrorelease/SRPMS/$section/$sectionrepo"
-    update_common_MD5SUM $distrorelease
 }
 
 function get_lock()
@@ -170,6 +169,7 @@ function update_common_MD5SUM()
 function mirror_repository()
 {
     local distrorelease="$1"
+    update_common_MD5SUM "$distrorelease"
     $dryrun /usr/bin/rsync $mirror_rsync_options "$distribdir/$distrorelease/" "$finaldistribdir/$distrorelease/"
 }
 
