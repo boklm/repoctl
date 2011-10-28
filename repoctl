@@ -38,6 +38,17 @@ Example :
   repoctl rmpkg --srcrepo 1:core:updates_testing --srcpkg emacs
 
 EOF
+	    ;;
+	lspkg)
+	    cat <<EOF
+Usage: repoctl lspkg --srcrepo distribution:section:sectionrepo \\
+		     --srcpkg|--binpkg name
+
+Example :
+  List emacs packages from 1/core/updates_testing repository :
+  repoctl lspkg --srcrepo 1:core:updates_testing --srcpkg emacs
+EOF
+	    ;;
     esac
 }
 
@@ -126,6 +137,53 @@ function rmpkg()
     mvpkg --remove $@
 }
 
+function lspkg()
+{
+    args=$(getopt -o hn -l srcrepo:,help,srcpkg:,binpkg: -- "$@")
+    [ $? -ne 0 ] && usage_cmd mvpkg && exit 1
+    eval set -- "$args"
+    [ $# -lt 1 ] && exit 1
+    while [ $# -gt 0 ]
+    do
+	case $1 in
+	    -h|--help)
+		usage_cmd lspkg
+		exit 0
+		;;
+	    --srcrepo)
+		IFS=':' read -ra srcrepo <<< "$2"
+		shift;shift;;
+	    --srcpkg)
+		srcpkg="$2"
+		shift;shift;;
+	    --binpkg)
+		binpkg="$2"
+		shift;shift;;
+	    --)
+		shift;break;;
+	    -*)
+		usage
+		exit 1
+		;;
+	    *)
+		break
+		;;
+	esac
+    done
+    if [ -z "$srcrepo" -o -z "$srcpkg$binpkg" ]
+    then
+	usage
+	exit 1
+    fi
+    if [ -n "$srcpkg" ]
+    then
+	ls_pkg "${srcrepo[0]}" "${srcrepo[1]}" "${srcrepo[2]}" "$srcpkg" "/dev/stdout"
+    else
+	echo "The --binpkg option is not supported yet"
+    fi
+
+}
+
 function usage()
 {
     cat <<EOF
@@ -135,6 +193,7 @@ function usage()
      mvpkg
      lnpkg
      rmpkg
+     lspkg
      genhdlists
      mirrordistro
      getrepolock
@@ -156,6 +215,10 @@ case "$1" in
     rmpkg)
 	shift
 	rmpkg $@
+	;;
+    lspkg)
+	shift
+	lspkg $@
 	;;
     *)
 	usage

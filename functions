@@ -333,3 +333,43 @@ function move_pkg()
 	"$output"
 }
 
+function ls_pkg()
+{
+    local src_distrorelease="$1"; shift
+    local src_section="$1"; shift
+    local src_sectionrepo="$1"; shift
+    local srcname="$1"; shift
+    local output="$1"; shift
+
+    check_distro_section "$src_distrorelease" "$src_section" "$src_sectionrepo"
+
+    local srcpkg=$(find_src_pkg "$src_distrorelease" "$src_section" "$src_sectionrepo" "$srcname")
+
+    if [ -z $srcpkg ]
+    then
+	return 0
+    fi
+
+    for arch in $arches
+    do
+	move_pkg_files \
+	    "" "" "" \
+	    "" "" "" \
+	    $(get_media_path "$src_distrorelease" "$src_section" "$src_sectionrepo" "$arch") \
+	    "" \
+	    "$srcpkg" "$output"
+	move_pkg_files \
+	    "" "" "" \
+	    "" "" "" \
+	    $(get_media_path_debug "$src_distrorelease" "$src_section" "$src_sectionrepo" "$arch") \
+	    "" \
+	    "$srcpkg" "$output"
+    done
+    move_pkg_file \
+	"" "" "" \
+	"" "" "" \
+	$(get_media_path_src "$src_distrorelease" "$src_section" "$src_sectionrepo") \
+	"" \
+	"$output"
+}
+
