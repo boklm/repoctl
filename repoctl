@@ -1,6 +1,8 @@
 #!/bin/bash
 
-. ./functions
+REPOCTL_FUNCTIONS='/usr/share/repoctl/functions'
+[ -f /etc/repoctl_functions ] && REPOCTL_FUNCTIONS=$(cat /etc/repoctl_functions)
+. $REPOCTL_FUNCTIONS
 
 function usage_cmd()
 {
