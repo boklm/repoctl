@@ -7,8 +7,8 @@ function usage_cmd()
     case "$1" in
 	mvpkg)
 	    cat <<EOF
-Usage: repoctl mvpkg [options] --srcrepo distribution:section:sectionrepo \\
-			       --dstrepo distribution:section:sectionrepo \\
+Usage: repoctl mvpkg [options] --srcrepo distribution/section/sectionrepo \\
+			       --dstrepo distribution/section/sectionrepo \\
 			       --srcpkg|--binpkg name
 
 Options:
@@ -26,7 +26,7 @@ EOF
 	    ;;
 	rmpkg)
 	    cat <<EOF
-Usage: repoctl rmpkg [options] --srcrepo distribution:section:sectionrepo \\
+Usage: repoctl rmpkg [options] --srcrepo distribution/section/sectionrepo \\
 			       --srcpkg|--binpkg name
 
 Options:
@@ -41,7 +41,7 @@ EOF
 	    ;;
 	lspkg)
 	    cat <<EOF
-Usage: repoctl lspkg --srcrepo distribution:section:sectionrepo \\
+Usage: repoctl lspkg --srcrepo distribution/section/sectionrepo \\
 		     --srcpkg|--binpkg name
 
 Example :
