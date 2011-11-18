@@ -400,7 +400,7 @@ function ls_pkg()
     move_pkg_file \
 	"" "" "" \
 	"" "" "" \
-	$(get_media_path_src "$src_distrorelease" "$src_section" "$src_sectionrepo") \
+	$(get_media_path_src "$src_distrorelease" "$src_section" "$src_sectionrepo")/"$srcpkg" \
 	"" \
 	"$output"
 }
