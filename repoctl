@@ -51,6 +51,17 @@ Example :
   repoctl lspkg --srcrepo 1/core/updates_testing --srcpkg emacs
 EOF
 	    ;;
+	repolock)
+	    cat <<EOF
+Usage: getrepolock|rmrepolock --srcrepo distribution/section/sectionrepo
+
+Get or release lock on a repository.
+
+Warning: one process should not try to get a lock on more than one
+repository at the same time. It is however possible to lock all
+repositories of a distribution using getdistrolock/rmdistrolock.
+
+EOF
     esac
 }
 
@@ -186,6 +197,46 @@ function lspkg()
 
 }
 
+function repolock()
+{
+    args=$(getopt -o h -l srcrepo:,help,get,rm -- "$@")
+    [ $? -ne 0 ] && usage_cmd repolock && exit 1
+    eval set -- "$args"
+    [ $# -lt 1 ] && exit 1
+    while [ $# -gt 0 ]
+    do
+	case $1 in
+	    -h|--help)
+		usage_cmd repolock
+		exit 0
+		;;
+	    --srcrepo)
+		IFS='/' read -ra srcrepo <<< "$2"
+		shift;shift;;
+	    --get)
+		command=get_repo_lock
+		shift;;
+	    --rm)
+		command=rm_repo_lock
+		shift;;
+	    --)
+		shift;break;;
+	    -*)
+		usage
+		exit 1
+		;;
+	    *)
+		break
+		;;
+	esac
+    done
+    if [ -z "$srcrepo" ]
+    then
+	usage_cmd repolock
+    fi
+    $command "${srcrepo[0]}" "${srcrepo[1]}" "${srcrepo[2]}"
+}
+
 function usage()
 {
     cat <<EOF
@@ -221,6 +272,14 @@ case "$1" in
     lspkg)
 	shift
 	lspkg $@
+	;;
+    getrepolock)
+	shift
+	repolock --get $@
+	;;
+    rmrepolock)
+	shift
+	repolock --rm $@
 	;;
     *)
 	usage
