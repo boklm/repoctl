@@ -71,6 +71,22 @@ function set_hdlists_needupdate()
     touch "$hdlistsdir/$distrorelease-$section-$sectionrepo"
 }
 
+function get_hdlists_needupdate()
+{
+    local distrorelease="$1"
+    local section="$2"
+    local sectionrepo="$3"
+    test -f "$hdlistsdir/$distrorelease-$section-$sectionrepo"
+}
+
+function rm_hdlists_needupdate()
+{
+    local distrorelease="$1"
+    local section="$2"
+    local sectionrepo="$3"
+    rm -f "$hdlistsdir/$distrorelease-$section-$sectionrepo"
+}
+
 function update_hdlists_if_needed()
 {
     for distrorelease in $distroreleases
@@ -79,8 +95,9 @@ function update_hdlists_if_needed()
 	do
 	    for sectionrepo in $sectionsrepos
 	    do
-		if [ -f "$hdlistsdir/$distrorelease-$section-$sectionrepo" ]
+		if get_hdlists_needupdate "$distrorelease" "$section" "$sectionrepo"
 		then
+		    rm_hdlists_needupdate "$distrorelease" "$section" "$sectionrepo"
 		    update_hdlists "$distrorelease" "$section" "$sectionrepo"
 		fi
 	    done
