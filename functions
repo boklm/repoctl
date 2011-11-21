@@ -97,7 +97,6 @@ function update_hdlists_if_needed()
 	    do
 		if get_hdlists_needupdate "$distrorelease" "$section" "$sectionrepo"
 		then
-		    rm_hdlists_needupdate "$distrorelease" "$section" "$sectionrepo"
 		    update_hdlists "$distrorelease" "$section" "$sectionrepo"
 		fi
 	    done
@@ -121,6 +120,7 @@ function update_hdlists()
 
     check_distro_section "$distrorelease" "$section" "$sectionrepo"
     get_repo_lock "$distrorelease" "$section" "$sectionrepo"
+    rm_hdlists_needupdate "$distrorelease" "$section" "$sectionrepo"
     rm -f "$hdlistsdir/$distrorelease-$section-$sectionrepo"
     for arch in $arches
     do
