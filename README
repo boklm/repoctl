@@ -1,3 +1,6 @@
+repoctl is a tool to manage a Mageia distribution repository. This can
+be used to remove or move packages between repositories, update hdlists,
+etc ...
 
-Dependencies :
- - inotify-tools
+Run repoctl --help for usage.
+
