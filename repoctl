@@ -242,6 +242,7 @@ function repolock()
     if [ -z "$srcrepo" ]
     then
 	usage_cmd repolock
+	exit 1
     fi
     $command "${srcrepo[0]}" "${srcrepo[1]}" "${srcrepo[2]}"
 }
