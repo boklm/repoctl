@@ -71,6 +71,18 @@ repository at the same time. It is however possible to lock all
 repositories of a distribution using getdistrolock/rmdistrolock.
 
 EOF
+	;;
+	genhdlists)
+	   cat <<EOF
+Usage: genhdlists [--needed] [--srcrepo distribution/section/sectionrepo]
+
+Options:
+  --srcrepo : rebuild hdilsts from selected repository
+  --needed  : rebuild hdlists for all repositories that have been updated
+              without hdlists rebuild.
+
+EOF
+	;;
     esac
 }
 
@@ -247,6 +259,51 @@ function repolock()
     $command "${srcrepo[0]}" "${srcrepo[1]}" "${srcrepo[2]}"
 }
 
+function genhdlists()
+{
+    args=$(getopt -o h -l srcrepo:,help,needed -- "$@")
+    [ $? -ne 0 ] && usage_cmd genhdlists && exit 1
+    eval set -- "$args"
+    [ $# -lt 1 ] && exit 1
+    while [ $# -gt 0 ]
+    do
+	case $1 in
+	    -h|--help)
+		usage_cmd genhdlists
+		exit 0
+		;;
+	    --srcrepo)
+		IFS='/' read -ra srcrepo <<< "$2"
+		shift;shift;;
+	    --needed)
+		local needed=1
+		shift;;
+	    --)
+		shift;break;;
+	    -*)
+		usage
+		exit 1
+		;;
+	    *)
+		break
+		;;
+	esac
+    done
+    if [ -z "$srcrepo$needed" ]
+    then
+	usage_cmd genhdlists
+	exit 1
+    fi
+    if [ -n "$srcrepo" ]
+    then
+	update_hdlists "${srcrepo[0]}" "${srcrepo[1]}" "${srcrepo[2]}"
+    fi
+    if [ -n "$needed" ]
+    then
+	update_hdlists_if_needed
+    fi
+}
+
 function usage()
 {
     cat <<EOF
@@ -290,6 +347,10 @@ case "$1" in
     rmrepolock)
 	shift
 	repolock --rm $@
+	;;
+    genhdlists)
+	shift
+	genhdlists $@
 	;;
     *)
 	usage
