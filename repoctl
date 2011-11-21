@@ -83,6 +83,14 @@ Options:
 
 EOF
 	;;
+        mirrordistro)
+	   cat <<EOF
+Usage: mirrordistro distrorelease
+
+Mirror the distribution tree to the main mirror.
+EOF
+       ;;
+	
     esac
 }
 
@@ -304,6 +312,21 @@ function genhdlists()
     fi
 }
 
+function mirrordistro()
+{
+    if [ $# != 1 ]
+    then
+	usage_cmd mirrordistro
+	exit 1
+    fi
+    if [ "$1" = "--help" ]
+    then
+	usage_cmd mirrordistro
+    else
+	mirror_repository "$1"
+    fi
+}
+
 function usage()
 {
     cat <<EOF
@@ -351,6 +374,10 @@ case "$1" in
     genhdlists)
 	shift
 	genhdlists $@
+	;;
+    mirrordistro)
+	shift
+	mirrordistro $@
 	;;
     *)
 	usage
