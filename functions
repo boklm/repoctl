@@ -181,7 +181,7 @@ function rm_repo_lock()
 function get_distro_lock()
 {
     local distrorelease="$1"
-    local distrolock="$lockdir/$distrorelease"
+    local distrolock="$lockdir/$distrorelease.lock"
     get_lock "$distrolock"
     for distrosection in $distrosections
     do
@@ -195,7 +195,7 @@ function get_distro_lock()
 function rm_distro_lock()
 {
     local distrorelease="$1"
-    local distrolock="$lockdir/$distrorelease"
+    local distrolock="$lockdir/$distrorelease.lock"
     for distrosection in $distrosections
     do
 	for sectionrepo in $sectionsrepos
