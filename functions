@@ -206,6 +206,26 @@ function rm_distro_lock()
     rm_lock "$distrolock"
 }
 
+function get_mirror_lock()
+{
+    local mirrorlock="$lockdir/mirror.lock"
+    get_lock "$mirrorlock"
+    for release in $distroreleases
+    do
+	get_distro_lock $release
+    done
+}
+
+function rm_mirror_lock()
+{
+    local mirrorlock="$lockdir/mirror.lock"
+    for release in $distroreleases
+    do
+	rm_distro_lock $release
+    done
+    rm_lock "$mirrorlock"
+}
+
 function update_common_MD5SUM()
 {
     local distrorelease="$1"
@@ -220,6 +240,37 @@ function update_common_MD5SUM()
     done
 }
 
+function update_mirror_timestamp()
+{
+    date +%s%n%c > "$rootdir/$timestampfile"
+}
+
+function update_mirror_sha1sum()
+{
+    pushd "$rootdir"
+    sha1sum "$timestampfile" > "$sha1sumfile"
+    for distrorelease in $distroreleases
+    do
+	for section in $distrosections
+	do
+	    for sectionrepo in $sectionsrepos
+	    do
+		for arch in $arches
+		do
+		    sha1sum "distrib/$distrorelease/$arch/media/$section/$sectionrepo/media_info/MD5SUM" >> "$sha1sumfile"
+		    sha1sum "distrib/$distrorelease/$arch/media/$section/$sectionrepo/media_info/pubkey" >> "$sha1sumfile"
+		    sha1sum "distrib/$distrorelease/$arch/media/debug/$section/$sectionrepo/media_info/MD5SUM" >> "$sha1sumfile"
+		    sha1sum "distrib/$distrorelease/$arch/media/debug/$section/$sectionrepo/media_info/pubkey" >> "$sha1sumfile"
+		done
+		sha1sum "distrib/$distrorelease/SRPMS/$section/$sectionrepo/media_info/MD5SUM" >> "$sha1sumfile"
+		sha1sum "distrib/$distrorelease/SRPMS/$section/$sectionrepo/media_info/pubkey" >> "$sha1sumfile"
+	    done
+	done
+    done
+    $dryrun $sign_mirror_sha1sum > "$sha1sumsigfile"
+    popd
+}
+
 function mirror_repository()
 {
     local distrorelease="$1"
@@ -232,6 +283,17 @@ function mirror_repository()
     update_common_MD5SUM "$distrorelease"
     $dryrun /usr/bin/rsync $mirror_rsync_options "$distribdir/$distrorelease/" "$finaldistribdir/$distrorelease/"
     rm_distro_lock "$distrorelease"
+    get_mirror_lock
+    if [ -z $dryrun ]
+    then
+	update_mirror_timestamp
+	update_mirror_sha1sum
+    fi
+    for file in "$timestampfile" "$sha1sumfile" "$sha1sumsigfile"
+    do
+	$dryrun /usr/bin/rsync $mirror_rsync_options "$rootdir/$file" "$finalrootdir/$file"
+    done
+    rm_mirror_lock
 }
 
 function check_distro_section()
