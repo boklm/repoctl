@@ -251,6 +251,13 @@ function update_mirror_sha1sum()
     sha1sum "$timestampfile" > "$sha1sumfile"
     for distrorelease in $distroreleases
     do
+	for arch in $arches
+	do
+	    for file in media.cfg hdlists compssUsers.pl rpmsrate
+	    do
+		sha1sum "distrib/$distrorelease/$arch/media/media_info/$file" >> "$sha1sumfile"
+	    done
+	done
 	for section in $distrosections
 	do
 	    for sectionrepo in $sectionsrepos
